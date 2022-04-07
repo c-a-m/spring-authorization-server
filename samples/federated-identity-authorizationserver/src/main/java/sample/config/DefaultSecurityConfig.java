@@ -15,6 +15,7 @@
  */
 package sample.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import sample.security.FederatedIdentityConfigurer;
 import sample.security.UserRepositoryOAuth2UserHandler;
 
@@ -34,12 +35,14 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @EnableWebSecurity
 public class DefaultSecurityConfig {
+	@Autowired
+	UserRepositoryOAuth2UserHandler userRepoHandler;
 
 	// @formatter:off
 	@Bean
 	public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 		FederatedIdentityConfigurer federatedIdentityConfigurer = new FederatedIdentityConfigurer()
-			.oauth2UserHandler(new UserRepositoryOAuth2UserHandler());
+			.oauth2UserHandler(userRepoHandler);
 		http
 			.authorizeRequests(authorizeRequests ->
 				authorizeRequests

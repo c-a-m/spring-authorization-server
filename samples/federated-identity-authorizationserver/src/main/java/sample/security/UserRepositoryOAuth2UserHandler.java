@@ -18,8 +18,10 @@ package sample.security;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Component;
 
 /**
  * Example {@link Consumer} to perform JIT provisioning of an {@link OAuth2User}.
@@ -27,18 +29,23 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
  * @author Steve Riesenberg
  * @since 0.2.3
  */
-public final class UserRepositoryOAuth2UserHandler implements Consumer<OAuth2User> {
+@Component
+public final class UserRepositoryOAuth2UserHandler implements Predicate<OAuth2User>, Consumer<OAuth2User>{
 
 	private final UserRepository userRepository = new UserRepository();
 
 	@Override
-	public void accept(OAuth2User user) {
+	public boolean test(OAuth2User user) {
 		// Capture user in a local data store on first authentication
-		if (this.userRepository.findByName(user.getName()) == null) {
-			System.out.println("Saving first-time user: name=" + user.getName() + ", claims=" + user.getAttributes() + ", authorities=" + user.getAuthorities());
-			this.userRepository.save(user);
-		}
+		return this.userRepository.findByName(user.getName()) != null;
 	}
+
+	@Override
+	public void accept(OAuth2User user) {
+		System.out.println("Saving first-time user: name=" + user.getName() + ", claims=" + user.getAttributes() + ", authorities=" + user.getAuthorities());
+		this.userRepository.save(user);
+	}
+
 
 	static class UserRepository {
 

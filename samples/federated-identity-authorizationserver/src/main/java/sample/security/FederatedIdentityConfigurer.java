@@ -16,6 +16,7 @@
 package sample.security;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,9 +38,9 @@ public final class FederatedIdentityConfigurer extends AbstractHttpConfigurer<Fe
 
 	private String authorizationRequestUri;
 
-	private Consumer<OAuth2User> oauth2UserHandler;
+	private Predicate<OAuth2User> oauth2UserHandler;
 
-	private Consumer<OidcUser> oidcUserHandler;
+	private Predicate<OidcUser> oidcUserHandler;
 
 	/**
 	 * @param loginPageUrl The URL of the login page, defaults to {@code "/login"}
@@ -68,7 +69,7 @@ public final class FederatedIdentityConfigurer extends AbstractHttpConfigurer<Fe
 	 * with an OAuth 2.0 IDP
 	 * @return This configurer for additional configuration
 	 */
-	public FederatedIdentityConfigurer oauth2UserHandler(Consumer<OAuth2User> oauth2UserHandler) {
+	public FederatedIdentityConfigurer oauth2UserHandler(Predicate<OAuth2User> oauth2UserHandler) {
 		Assert.notNull(oauth2UserHandler, "oauth2UserHandler cannot be null");
 		this.oauth2UserHandler = oauth2UserHandler;
 		return this;
@@ -79,7 +80,7 @@ public final class FederatedIdentityConfigurer extends AbstractHttpConfigurer<Fe
 	 * with an OpenID Connect 1.0 IDP
 	 * @return This configurer for additional configuration
 	 */
-	public FederatedIdentityConfigurer oidcUserHandler(Consumer<OidcUser> oidcUserHandler) {
+	public FederatedIdentityConfigurer oidcUserHandler(Predicate<OidcUser> oidcUserHandler) {
 		Assert.notNull(oidcUserHandler, "oidcUserHandler cannot be null");
 		this.oidcUserHandler = oidcUserHandler;
 		return this;
@@ -103,7 +104,7 @@ public final class FederatedIdentityConfigurer extends AbstractHttpConfigurer<Fe
 			authenticationSuccessHandler.setOAuth2UserHandler(this.oauth2UserHandler);
 		}
 		if (this.oidcUserHandler != null) {
-			authenticationSuccessHandler.setOidcUserHandler(this.oidcUserHandler);
+			authenticationSuccessHandler.setOidcUserTester(this.oidcUserHandler);
 		}
 
 		http

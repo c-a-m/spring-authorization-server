@@ -16,7 +16,7 @@
 package sample.security;
 
 import java.io.IOException;
-import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -40,29 +40,35 @@ public final class FederatedIdentityAuthenticationSuccessHandler implements Auth
 
 	private final AuthenticationSuccessHandler delegate = new SavedRequestAwareAuthenticationSuccessHandler();
 
-	private Consumer<OAuth2User> oauth2UserHandler = (user) -> {};
+	private Predicate<OAuth2User> oauth2UserTester = (user) -> false;
 
-	private Consumer<OidcUser> oidcUserHandler = (user) -> this.oauth2UserHandler.accept(user);
+	private Predicate<OidcUser> oidcUserTester = (user) -> this.oauth2UserTester.test(user);
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+		boolean isPrincipalInTheDb = false;
 		if (authentication instanceof OAuth2AuthenticationToken) {
-			if (authentication.getPrincipal() instanceof OidcUser) {
-				this.oidcUserHandler.accept((OidcUser) authentication.getPrincipal());
+ 			if (authentication.getPrincipal() instanceof OidcUser) {
+				isPrincipalInTheDb = this.oidcUserTester.test((OidcUser) authentication.getPrincipal());
 			} else if (authentication.getPrincipal() instanceof OAuth2User) {
-				this.oauth2UserHandler.accept((OAuth2User) authentication.getPrincipal());
+				isPrincipalInTheDb = this.oauth2UserTester.test((OAuth2User) authentication.getPrincipal());
 			}
 		}
 
-		this.delegate.onAuthenticationSuccess(request, response, authentication);
+		if(isPrincipalInTheDb) {
+			this.delegate.onAuthenticationSuccess(request, response, authentication);
+		}
+		else {
+			response.sendRedirect("/register");
+		}
 	}
 
-	public void setOAuth2UserHandler(Consumer<OAuth2User> oauth2UserHandler) {
-		this.oauth2UserHandler = oauth2UserHandler;
+	public void setOAuth2UserHandler(Predicate<OAuth2User> oauth2UserHandler) {
+		this.oauth2UserTester = oauth2UserHandler;
 	}
 
-	public void setOidcUserHandler(Consumer<OidcUser> oidcUserHandler) {
-		this.oidcUserHandler = oidcUserHandler;
+	public void setOidcUserTester(Predicate<OidcUser> oidcUserTester) {
+		this.oidcUserTester = oidcUserTester;
 	}
 
 }

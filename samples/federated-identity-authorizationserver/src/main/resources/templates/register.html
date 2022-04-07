@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Spring Security Example</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <link href="https://getbootstrap.com/docs/4.0/examples/signin/signin.css" rel="stylesheet" crossorigin="anonymous"/>
+</head>
+<body>
+<div class="container">
+    <form class="form-signin" method="post" th:action="@{/register}">
+        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+            Invalid username or password.
+        </div>
+        <div th:if="${param.logout}" class="alert alert-success" role="alert">
+            You have been logged out.
+        </div>
+        <h2 class="form-signin-heading">Would you like to create an account using your social login?</h2>
+        <p>
+            <label for="create" class="sr-only">Continue with @{#principal.idp}</label>
+            <input type="checkbox" id="create" name="create" class="form-control" placeholder="create" autofocus>
+        </p>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">yep</button>
+    </form>
+</div>
+</body>
+</html>
