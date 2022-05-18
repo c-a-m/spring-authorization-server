@@ -17,10 +17,15 @@ package sample.web;
 
 import java.io.IOException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +40,7 @@ import sample.security.UserRepositoryOAuth2UserHandler;
 public class RegisterController {
 
 	private final UserRepositoryOAuth2UserHandler userHandler;
+	private final  RequestCache requestCache = new HttpSessionRequestCache();
 
 	public RegisterController(UserRepositoryOAuth2UserHandler userHandler) {
 		this.userHandler = userHandler;
@@ -46,18 +52,20 @@ public class RegisterController {
 	}
 
 	@PostMapping("/register")
-	public String register(@RequestParam(value = "create") boolean create, Authentication authn, HttpServletResponse response)
+	public String register(@RequestParam(value = "create") boolean create, Authentication authn,
+			HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
 		if (authn instanceof OAuth2AuthenticationToken) {
 			OAuth2AuthenticationToken accessToken = (OAuth2AuthenticationToken) authn;
-			String idp = accessToken.getAuthorizedClientRegistrationId();
 
 			// save the user in the db:
 			if (!userHandler.test(accessToken.getPrincipal())) {
 				userHandler.accept(accessToken.getPrincipal());
 			}
 
-			response.sendRedirect("/oauth2/authorization/" + idp);
+			SavedRequest savedRequest = requestCache.getRequest(request, response);
+			DefaultRedirectStrategy redirect = new DefaultRedirectStrategy();
+			redirect.sendRedirect(request, response, savedRequest.getRedirectUrl());
 		}
 		return "register";
 	}
